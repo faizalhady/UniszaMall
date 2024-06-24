@@ -1,4 +1,4 @@
-import {defineField, defineType} from 'sanity'
+import { defineField, defineType } from 'sanity'
 
 export default defineType({
   name: 'products',
@@ -18,55 +18,46 @@ export default defineType({
         hotspot: true,
       },
     }),
+
     defineField({
-      name: 'bgImage',
-      title: 'Background image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-    }),
-    defineField({
-      name: 'productType',
-      title: 'Product Type',
+      name: 'categories',
+      title: 'Categories',
       type: 'string',
-      options:{
+      options: {
         list: [
-          {title:'Body Lotion', value : 'bodyLotion'},
-          {title:'Face Wash', value : 'faceWash'},
-          {title:'Perfumes', value : 'perfumes'},
-          {title:'Mouth Cleanser', value : 'mouthCleanser'},
+          { title: 'Stationery', value: 'stationery' },
+          { title: 'Electronics', value: 'electronics' },
+          { title: 'Textbooks', value: 'textbooks' },
+          { title: 'Backpacks & Bags', value: 'bags' },
+          { title: 'Health & Wellness Products', value: 'healthWellness' },
+          { title: 'Dorm Room Essentials', value: 'dormEssentials' },
+          { title: 'Snacks & Beverages', value: 'snacks' },
+          { title: 'Clothing & Accessories', value: 'clothing' },
         ],
         layout: 'radio'
       }
     }),
-    defineField({
-      name: 'categories',
-      title: 'Categories',
-      type: 'array',
-      of: [{type: 'reference', to: {type: 'category'}}],
-    }),
+
     defineField({
       name: 'description',
       title: 'Description',
       type: 'string',
     }),
     defineField({
-      name: 'shortDescription',
-      title: 'Short Description',
-      type: 'string',
-    }),
-    defineField({
       name: 'price',
       title: 'Price',
       type: 'number',
-      description : 'The price of the product in RM',
+      description: 'The price of the product in RM',
       validation: (Rule) => Rule.required().positive(),
       options: {
         format: 'currency'
       }
     }),
-
+    defineField({
+      name: 'username',
+      title: 'Username',
+      type: 'string',
+    }),
   ],
 
 })
