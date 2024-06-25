@@ -42,93 +42,111 @@ let transporter = nodemailer.createTransport({
 //   ############################# Authentication ###################################
 
 
-function generateVerificationToken() {
-  return crypto.randomBytes(20).toString('hex');
-}
+// function generateVerificationToken() {
+//   return crypto.randomBytes(20).toString('hex');
+// }
 
-// Route to handle user signup
-app.post('/Signup', (req, res) => {
-  const { Username, Email, Password } = req.body;
+// // Route to handle user signup
+// app.post('/Signup', (req, res) => {
+//   const { Username, Email, Password } = req.body;
   
-  // if (!Email.endsWith('@putra.unisza.edu.my')) {
-  //   return res.status(400).json({ Error: 'Only @putra.unisza.edu.my email addresses are allowed.' });
-  // }
+//   // if (!Email.endsWith('@putra.unisza.edu.my')) {
+//   //   return res.status(400).json({ Error: 'Only @putra.unisza.edu.my email addresses are allowed.' });
+//   // }
 
-  const token = generateVerificationToken();
-  const sql = `INSERT INTO login (Username, Email, Password, VerificationToken, Verified) VALUES (?, ?, ?, ?, ?)`;
+//   const token = generateVerificationToken();
+//   const sql = `INSERT INTO login (Username, Email, Password, VerificationToken, Verified) VALUES (?, ?, ?, ?, ?)`;
 
-  db.query(sql, [Username, Email, Password, token, false], (err, result) => {
+//   db.query(sql, [Username, Email, Password, token, false], (err, result) => {
+//     if (err) {
+//       console.error('Error inserting data:', err);
+//       return res.status(500).json({ Error: 'Database error', Message: err.message });
+//     }
+    
+//     const mailOptions = {
+//       from: 'syedfaizalhady@gmail.com',
+//       to: Email,
+//       subject: 'Please verify your email address',
+//       html: `<h4>Thank you for registering at our site</h4>
+//              <p>Please verify your email by clicking on the link below:</p>
+//              <a href="http://yourdomain.com/verify-email?token=${token}">Verify Email</a>`
+//     };
+
+//     transporter.sendMail(mailOptions, function(error, info) {
+//       if (error) {
+//         console.log(error);
+//         res.status(500).json({ message: 'Error sending email' });
+//       } else {
+//         console.log('Email sent: ' + info.response);
+//         res.status(200).json({Status: 'Success', message: 'Verification email sent', id: result.insertId });
+//       }
+//     });
+//   });
+// });
+// // ###########################################################################################
+// // Route to verify the user email
+// app.get('/verify-email', (req, res) => {
+//   const { token } = req.query;
+//   const sql = `SELECT * FROM login WHERE VerificationToken = ?`;
+
+//   db.query(sql, [token], (err, results) => {
+//     if (err) {
+//       console.error('Error fetching user:', err);
+//       return res.status(500).json({ Error: 'Database error', Message: err.message });
+//     }
+
+//     if (results.length > 0) {
+//       const sqlUpdate = `UPDATE login SET Verified = 1 WHERE VerificationToken = ?`;
+//       db.query(sqlUpdate, [token], (err, updateResults) => {
+//         if (err) {
+//           console.error('Error updating user:', err);
+//           return res.status(500).json({ Error: 'Database error', Message: err.message });
+//         }
+//         res.json({ message: 'Email verified successfully' });
+//       });
+//     } else {
+//       res.status(404).json({ message: 'Invalid or expired verification token' });
+//     }
+//   });
+// });
+
+// ** Signup
+app.post('/Signup', (req, res) => {
+  const insertLoginSql = "INSERT INTO login (Username, Email, Password) VALUES (?)";
+  const getNewUserIdSql = "SELECT LAST_INSERT_ID() as userId";
+  const insertRecommendSql = "INSERT INTO recommend (id) VALUES (?)";
+
+  const values = [
+    req.body.Username,
+    req.body.Email,
+    req.body.Password, // Assuming password is received as plaintext
+  ];
+
+  db.query(insertLoginSql, [values], (err, result) => {
     if (err) {
       console.error('Error inserting data:', err);
-      return res.status(500).json({ Error: 'Database error', Message: err.message });
+      return res.json({ Error: 'Fail' });
     }
-    
-    const mailOptions = {
-      from: 'syedfaizalhady@gmail.com',
-      to: Email,
-      subject: 'Please verify your email address',
-      html: `<h4>Thank you for registering at our site</h4>
-             <p>Please verify your email by clicking on the link below:</p>
-             <a href="http://yourdomain.com/verify-email?token=${token}">Verify Email</a>`
-    };
 
-    transporter.sendMail(mailOptions, function(error, info) {
-      if (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Error sending email' });
-      } else {
-        console.log('Email sent: ' + info.response);
-        res.status(200).json({Status: 'Success', message: 'Verification email sent', id: result.insertId });
+    db.query(getNewUserIdSql, (err, result) => {
+      if (err) {
+        console.error('Error retrieving new user ID:', err);
+        return res.json({ Error: 'Fail' });
       }
+
+      const newUserId = result[0].userId;
+
+      db.query(insertRecommendSql, [newUserId], (err, result) => {
+        if (err) {
+          console.error('Error inserting into recommend table:', err);
+          return res.json({ Error: 'Fail' });
+        }
+
+        return res.json({ Status: 'Success' });
+      });
     });
   });
 });
-// ###########################################################################################
-// Route to verify the user email
-app.get('/verify-email', (req, res) => {
-  const { token } = req.query;
-  const sql = `SELECT * FROM login WHERE VerificationToken = ?`;
-
-  db.query(sql, [token], (err, results) => {
-    if (err) {
-      console.error('Error fetching user:', err);
-      return res.status(500).json({ Error: 'Database error', Message: err.message });
-    }
-
-    if (results.length > 0) {
-      const sqlUpdate = `UPDATE login SET Verified = 1 WHERE VerificationToken = ?`;
-      db.query(sqlUpdate, [token], (err, updateResults) => {
-        if (err) {
-          console.error('Error updating user:', err);
-          return res.status(500).json({ Error: 'Database error', Message: err.message });
-        }
-        res.json({ message: 'Email verified successfully' });
-      });
-    } else {
-      res.status(404).json({ message: 'Invalid or expired verification token' });
-    }
-  });
-});
-
-// // ** Signup
-// app.post('/Signup', (req, res) => {
-//     const sql = "INSERT INTO login (Username, Email, Password) VALUES (?)";
-
-//     const values = [
-//       req.body.Username,
-//         req.body.Email,
-//         req.body.Password, // Assuming password is received as plaintext
-        
-//       ];
-      
-//       db.query(sql, [values], (err, result) => {
-//         if (err) {
-//           console.error('Error inserting data:', err);
-//           return res.json({ Error: 'Fail' });
-//         }
-//         return res.json({ Status: 'Success' });
-//       });
-//     });
 
 // ###########################################################################################
 
@@ -529,25 +547,58 @@ app.get('/purchases/:purchaseId', authenticateJWT, (req, res) => {
 
 // #########################################################
 
-app.post('/update-recommend', (req, res) => {
-  const { category, count } = req.body;
+app.post('/update-recommend', authenticateJWT, (req, res) => {
+  const userId = req.user.id;
+  const { category } = req.body;
 
-  if (!category || count == null) {
-    return res.status(400).send('Category and count are required');
+  if (!category) {
+    console.error('Category is required');
+    return res.status(400).json({ error: 'Category is required' });
   }
 
-  // Update the recommend table
   const query = `
-    INSERT INTO recommend (id, ${category})
-    VALUES (1, ${count})
-    ON DUPLICATE KEY UPDATE ${category} = ${count};
+    UPDATE recommend 
+    SET \`${category}\` = \`${category}\` + 1
+    WHERE id = ?;
   `;
 
-  db.query(query, (err, results) => {
+  db.query(query, [userId], (err, results) => {
     if (err) {
       console.error('Error updating recommend table:', err);
+      return res.status(500).json({ error: 'Database query error' });
+    }
+    res.json({ message: 'Recommendation updated successfully' });
+  });
+});
+
+app.get('/highest-recommend', authenticateJWT, (req, res) => {
+  const userId = req.user.id;
+
+  const query = `
+    SELECT * FROM recommend WHERE id = ?;
+  `;
+
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching recommend table:', err);
       return res.status(500).send('Server error');
     }
-    res.send('Recommendation updated successfully');
+
+    if (results.length === 0) {
+      return res.status(404).send('No recommendations found');
+    }
+
+    const row = results[0];
+    let maxColumn = null;
+    let maxValue = -Infinity;
+
+    for (const [column, value] of Object.entries(row)) {
+      if (column !== 'id' && value > maxValue) {
+        maxColumn = column;
+        maxValue = value;
+      }
+    }
+
+    res.send({ maxColumn });
   });
 });

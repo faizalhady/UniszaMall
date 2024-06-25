@@ -100,7 +100,7 @@ const AuthScreen = ({ navigation }) => {
                 Alert.alert('Error', 'Please fill in all fields.');
                 return;
             }
-            axios.post('http://172.20.105.130/Signup', values)
+            axios.post('/Signup', values)
                 .then(res => {
                     console.log(res.data);
                     if (res.data.Status === "Success") {

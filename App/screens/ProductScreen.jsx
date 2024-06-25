@@ -6,22 +6,24 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AntDesign, Entypo, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { addtocart } from "../context/actions/cartActions";
+import { addtocart } from "../context/actions/cartActions"; // Ensure you have addtocart action
 import axios from "../AxiosConfig";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProductScreen = ({ route }) => {
   const { _id } = route.params;
 
-  const cartItems = useSelector((state) => state.cartItems);
   const feeds = useSelector((state) => state.feeds);
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [loadingCart, setLoadingCart] = useState(true);
 
   const [qty, setQty] = useState(1);
 
@@ -30,15 +32,84 @@ const ProductScreen = ({ route }) => {
 
   const screenHeight = Math.round(Dimensions.get("window").height);
 
+  const updateCategory = async (categories) => {
+    console.log('Screen accessed, categories:', categories); // Debug log to check function trigger
+
+    try {
+      const token = await AsyncStorage.getItem('token'); // Adjust based on how you store the token
+      console.log(`Sending request with categories: ${categories}`); // Debug log before axios call
+      const response = await axios.post('/update-recommend', 
+        { category: categories },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      console.log('Incremented categories click count', response.data); // Debug log after successful axios call
+    } catch (error) {
+      console.error('Error incrementing categories click count:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  const handleLikeItem = async (itemId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const response = await axios.get('/user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          timeout: 10000,
+        });
+        const username = response.data.Username;
+
+        await axios.post('/like', { itemId, username }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        Alert.alert('Success', 'Item liked successfully');
+      }
+    } catch (error) {
+      console.error('Error liking item:', error);
+      Alert.alert('Error', 'Failed to like item');
+    }
+  };
+
+  const fetchCartItems = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const response = await axios.get('/cart', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log('Cart items fetched:', response.data);
+        setCartItems(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+    } finally {
+      setLoadingCart(false);
+    }
+  };
+
   useEffect(() => {
     setIsLoading(true);
     if (feeds) {
-      setData(feeds?.feeds.filter((item) => item._id === _id)[0]);
+      const productData = feeds?.feeds.filter((item) => item._id === _id)[0];
+      setData(productData);
+      if (productData) {
+        updateCategory(productData.categories); // Trigger the function when the product is loaded
+      }
+      fetchCartItems();
       setInterval(() => {
         setIsLoading(false);
       }, 2000);
     }
-  }, []);
+  }, [feeds]);
 
   const handleQty = (action) => {
     const newQty = qty + action;
@@ -55,12 +126,14 @@ const ProductScreen = ({ route }) => {
           },
         });
         dispatch(addtocart({ data: data, qty: qty }));
+        setCartItems([...cartItems, { _id: data._id }]); // Update local state immediately
       }
     } catch (error) {
       console.error('Error adding item to cart:', error);
     }
   };
 
+  const isItemInCart = cartItems.some(item => item._id === _id);
 
   return (
     <View className="flex-1 items-start justify-start bg-[#EBEAEF] space-y-4">
@@ -88,7 +161,6 @@ const ProductScreen = ({ route }) => {
               className="w-full flex items-center justify-center relative"
               style={{ height: screenHeight / 2 }}
             >
-
               <View className="w-full h-full absolute top-0 left-0 flex items-center justify-center ">
                 <Image
                   source={{ uri: data?.mainImage?.asset?.url }}
@@ -97,27 +169,6 @@ const ProductScreen = ({ route }) => {
                 />
               </View>
             </View>
-
-            {/* Category Section */}
-            {/* <View className="w-full flex-row items-center justify-evenly mb-4">
-              {data?.categories &&
-                data?.categories?.length > 0 &&
-                data?.categories.map((value) => (
-                  <View
-                    key={value._id}
-                    className="p-2 w-24 rounded-xl bg-white flex items-center justify-center space-y-2"
-                  >
-                    <Image
-                      source={{ uri: value?.mainImage?.asset?.url }}
-                      resizeMode="contain"
-                      className="w-10 h-10 opacity-70"
-                    />
-                    <Text className="font-semibold text-[#555]">
-                      {value.title}
-                    </Text>
-                  </View>
-                ))}
-            </View> */}
           </SafeAreaView>
 
           <View className="w-full flex-1 h-full bg-white rounded-t-[36px] py-6 px-12 space-y-4">
@@ -130,7 +181,10 @@ const ProductScreen = ({ route }) => {
                   {data?.shortDescription}
                 </Text>
               </View>
-              <TouchableOpacity className="bg-black w-8 h-8 rounded-full flex items-center justify-center">
+              <TouchableOpacity 
+                className="bg-black w-8 h-8 rounded-full flex items-center justify-center"
+                onPress={() => handleLikeItem(data._id)}
+              >
                 <AntDesign name="heart" size={16} color="#fbfbfb" />
               </TouchableOpacity>
             </View>
@@ -151,22 +205,25 @@ const ProductScreen = ({ route }) => {
                 </TouchableOpacity>
               </View>
 
-              {cartItems?.cart?.filter((item) => item?.data?._id === data?._id)
-                ?.length > 0 ? (
-                <TouchableOpacity className="bg-black px-4 py-2 rounded-xl">
-                  <Text className="text-base font-semibold text-gray-50">
-                    Added
-                  </Text>
-                </TouchableOpacity>
+              {loadingCart ? (
+                <ActivityIndicator size="small" color="teal" />
               ) : (
-                <TouchableOpacity
-                  onPress={handlePressCart}
-                  className="bg-black px-4 py-2 rounded-xl"
-                >
-                  <Text className="text-base font-semibold text-gray-50">
-                    Add to Cart
-                  </Text>
-                </TouchableOpacity>
+                isItemInCart ? (
+                  <TouchableOpacity className="bg-black px-4 py-2 rounded-xl">
+                    <Text className="text-base font-semibold text-gray-50">
+                      Added
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={handlePressCart}
+                    className="bg-black px-4 py-2 rounded-xl"
+                  >
+                    <Text className="text-base font-semibold text-gray-50">
+                      Add to Cart
+                    </Text>
+                  </TouchableOpacity>
+                )
               )}
             </View>
           </View>
