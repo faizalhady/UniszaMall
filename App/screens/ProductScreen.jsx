@@ -12,6 +12,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { AntDesign, Entypo, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { addtocart } from "../context/actions/cartActions";
+import axios from "../AxiosConfig";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProductScreen = ({ route }) => {
   const { _id } = route.params;
@@ -43,9 +45,22 @@ const ProductScreen = ({ route }) => {
     setQty(newQty >= 1 ? newQty : 1);
   };
 
-  const handlePressCart = () => {
-    dispatch(addtocart({ data: data, qty: qty }));
+  const handlePressCart = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        await axios.post('/cart/add', { itemId: data._id, quantity: qty }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        dispatch(addtocart({ data: data, qty: qty }));
+      }
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+    }
   };
+
 
   return (
     <View className="flex-1 items-start justify-start bg-[#EBEAEF] space-y-4">
@@ -64,7 +79,7 @@ const ProductScreen = ({ route }) => {
               <TouchableOpacity
                 onPress={() => navigation.navigate("CartScreen")}
               >
-                <MaterialIcons name="shopping-cart" size={32} color={"#555"} />
+                <MaterialIcons name="shopping-cart" size={32} color={"black"} />
               </TouchableOpacity>
             </View>
 
@@ -73,7 +88,7 @@ const ProductScreen = ({ route }) => {
               className="w-full flex items-center justify-center relative"
               style={{ height: screenHeight / 2 }}
             >
-              
+
               <View className="w-full h-full absolute top-0 left-0 flex items-center justify-center ">
                 <Image
                   source={{ uri: data?.mainImage?.asset?.url }}

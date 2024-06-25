@@ -1,37 +1,173 @@
-import { View, Text, SafeAreaView, TouchableOpacity, Image, ScrollView, FlatList, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  SafeAreaView,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { Entypo, FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useDispatch, useSelector } from "react-redux";
-import { EmptyCart } from "../assets";
-import { loadStripe } from '@stripe/stripe-js';
-import Swipeable from "react-native-gesture-handler/Swipeable";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { removeFromCart } from "../context/actions/cartActions";
+import axios from '../AxiosConfig';
+import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchFeeds } from '../sanity';
 
 const CartScreen = () => {
   const navigation = useNavigation();
   const [total, setTotal] = useState(0);
-  const cartItems = useSelector((state) => state.cartItems.cart);
- 
+  const [cartItems, setCartItems] = useState([]);
+  const [feeds, setFeeds] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const fetchCartItems = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const response = await axios.get('/cart', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log('Cart items fetched:', response.data);
+        setCartItems(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const fetchAllFeeds = async () => {
+    try {
+      const allFeeds = await fetchFeeds();
+      setFeeds(allFeeds);
+    } catch (error) {
+      console.error('Error fetching all feeds:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCartItems();
+    fetchAllFeeds();
+  }, []);
 
   useEffect(() => {
     let mainTotal = 0;
-    if (cartItems?.length > 0) {
-      cartItems.map((item) => {
-        // console.log(item.data.price * item.qty);
-        mainTotal += item.data.price * item.qty;
-        setTotal(mainTotal);
+    if (cartItems?.length > 0 && feeds.length > 0) {
+      cartItems.forEach((cartItem) => {
+        const feedItem = feeds.find(feed => feed._id === cartItem.item_id);
+        if (feedItem) {
+          mainTotal += feedItem.price * cartItem.Qty;
+        }
       });
+      setTotal(mainTotal);
     }
-  }, [cartItems]);
+  }, [cartItems, feeds]);
+
+  const handleDeleteCartItem = async (itemId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        await axios.delete(`/cart/remove/${itemId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCartItems(cartItems.filter((item) => item.item_id !== itemId));
+        Alert.alert('Success', 'Item removed from cart successfully');
+      }
+    } catch (error) {
+      console.error('Error removing item from cart:', error);
+      Alert.alert('Error', 'Failed to remove item from cart');
+    }
+  };
+
+  const handleProceedToCheckout = () => {
+    const shippingCost = 5.0;
+    const grandTotal = total + shippingCost;
+    const itemsWithPrices = cartItems.map(cartItem => {
+      const feedItem = feeds.find(feed => feed._id === cartItem.item_id);
+      return {
+        ...cartItem,
+        price: feedItem ? feedItem.price : 0
+      };
+    });
+    navigation.navigate('ConfirmCheckout', { subtotal: total, shippingCost, grandTotal, items: itemsWithPrices });
+  };
+
+  const rightSwipeActions = () => {
+    return (
+      <View className="h-full w-24 flex items-center justify-center bg-white">
+        <TouchableOpacity>
+          <FontAwesome5 name="trash" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const CartItemCard = ({ item, Qty }) => {
+    return (
+      <Swipeable
+        renderRightActions={rightSwipeActions}
+        onSwipeableRightOpen={() => handleDeleteCartItem(item._id)}
+      >
+        <View className="flex-row px-6 w-full items-center my-1">
+          <View className="bg-white rounded-xl flex items-center justify-center p-2 w-16 h-16 relative">
+            <Image
+              source={{ uri: item?.mainImage?.asset?.url }}
+              resizeMode="cover"
+              className="w-full h-full opacity-30"
+            />
+            <View className="inset-0 absolute  flex items-center justify-center ">
+              <Image
+                source={{ uri: item?.mainImage?.asset?.url }}
+                resizeMode="contain"
+                className="w-12 h-12"
+              />
+            </View>
+          </View>
+
+          <View className="flex items-center space-y-2 ml-3 flex-1">
+            <View className="flex items-start justify-center">
+              <Text className="text-lg font-semibold text-[#555]">
+                {item?.title}
+              </Text>
+              <Text className="text-sm font-semibold text-[#777]">
+                {item?.shortDescription}
+              </Text>
+              <Text className="text-lg font-bold text-black">
+                RM {item?.price}
+              </Text>
+            </View>
+          </View>
+
+          <View className="flex-row items-center justify-center space-x-4 rounded-xl border border-gray-300 px-3 py-1 ml-auto">
+            <Text className="text-lg font-bold text-black"> Qty : {Qty}</Text>
+          </View>
+        </View>
+      </Swipeable>
+    );
+  };
+
+  if (loading) {
+    return (
+      <GestureHandlerRootView className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </GestureHandlerRootView>
+    );
+  }
+
+  const getCartItemData = (itemId) => feeds.find(feed => feed._id === itemId);
 
   return (
-    <SafeAreaView className="flex-1 w-full items-start justify-start bg-[#EBEAEF] space-y-4">
-      <GestureHandlerRootView>
-        {/* top section */}
+    <GestureHandlerRootView className="flex-1 w-full items-start justify-start bg-[#EBEAEF] space-y-4">
+      <SafeAreaView>
         <View className="flex-row items-center justify-between w-full px-4 py-12">
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Entypo name="chevron-left" size={32} color={"#555"} />
@@ -41,10 +177,10 @@ const CartScreen = () => {
             Shopping Bag
           </Text>
 
-          <View className="w-10 h-10 rounded-xl bg-white flex items-center justify-center relative">
-            <FontAwesome5 name="shopping-bag" size={16} color="black" />
-            <View className="absolute w-4 h-4 bg-black top-0 right-0 rounded-md flex items-center justify-center">
-              <Text className="text-white">{cartItems?.length}</Text>
+          <View className="w-10 h-10 rounded-xl  flex items-center justify-center relative">
+            <FontAwesome5 name="shopping-bag" size={26} color="black" />
+            <View className="absolute w-4 h-4 bg-orange-500 top-0 right-0 rounded-md flex items-center justify-center " >
+              <Text className="text-white" >{cartItems?.length}</Text>
             </View>
           </View>
         </View>
@@ -58,27 +194,14 @@ const CartScreen = () => {
             <View className="flex space-y-4">
               <FlatList
                 data={cartItems}
-                keyExtractor={(item) => item.data._id}
-                renderItem={({ item }) => (
-                  <CartItemCard item={item.data} qty={item.qty} />
-                )}
+                keyExtractor={(item) => item.item_id}
+                renderItem={({ item }) => {
+                  const feedItemData = getCartItemData(item.item_id);
+                  return feedItemData ? <CartItemCard item={feedItemData} Qty={item.Qty} /> : null;
+                }}
               />
             </View>
 
-            {/* promo code section
-              <View className="w-full p-8">
-                <View className="w-full px-2 py-2 h-16 rounded-xl bg-white flex-row itece justify-center">
-                  <TextInput
-                    placeholder="Promo Code"
-                    className="text-base px-4 font-semibold text-[#555] flex-1 py-1 -mt-1 "
-                  />
-                  <TouchableOpacity className="px-3 py-2 rounded-xl bg-black">
-                    <Text className="text-white text-lg">Apply</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-   */}
-            {/* total calculation */}
             <View className="px-8 w-full flex space-y-4">
               <View className="flex-row items-center justify-between">
                 <Text className="text-lg font-semibold text-[#555]">
@@ -93,7 +216,6 @@ const CartScreen = () => {
               </View>
               <View className="w-full h-[2px] bg-white"></View>
 
-              {/* shipping */}
               <View className="flex-row items-center justify-between">
                 <Text className="text-lg font-semibold text-[#555]">
                   Shipping Cost
@@ -107,7 +229,6 @@ const CartScreen = () => {
               </View>
               <View className="w-full h-[2px] bg-white"></View>
 
-              {/* grand total */}
               <View className="flex-row items-center justify-between">
                 <Text className="text-lg font-semibold text-[#555]">
                   Subtotal
@@ -126,7 +247,8 @@ const CartScreen = () => {
 
             <View className="w-full px-8 my-4">
               <TouchableOpacity 
-                className="w-full p-2 py-3 rounded-xl bg-black flex items-center justify-center"
+                className="w-full p-2 py-3 rounded-xl bg-orange-500 flex items-center justify-center"
+                onPress={handleProceedToCheckout}
               >
                 <Text className="text-lg text-white font-semibold">
                   Proceed to checkout
@@ -135,75 +257,8 @@ const CartScreen = () => {
             </View>
           </ScrollView>
         )}
-      </GestureHandlerRootView>
-    </SafeAreaView>
-  );
-};
-
-const rightSwipeActions = () => {
-  return (
-    <View className="h-full w-24 flex items-center justify-center bg-white">
-      <TouchableOpacity>
-        <FontAwesome5 name="trash" size={24} color="black" />
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-export const CartItemCard = ({ item, qty }) => {
-  const dispatch = useDispatch();
-
-  const swipeFromRightOpen = (_id) => {
-    dispatch(removeFromCart(_id));
-  };
-
-  return (
-    <Swipeable
-      renderRightActions={rightSwipeActions}
-      onSwipeableRightOpen={() => swipeFromRightOpen(item._id)}
-    >
-      <View className="flex-row px-6 w-full items-center my-1">
-        {/* Image */}
-        <View className="bg-white rounded-xl flex items-center justify-center p-2 w-16 h-16 relative">
-          <Image
-            source={{ uri: item?.bgImage?.asset?.url }}
-            resizeMode="cover"
-            className="w-full h-full opacity-30"
-          />
-          <View className="inset-0 absolute  flex items-center justify-center ">
-            <Image
-              source={{ uri: item?.mainImage?.asset?.url }}
-              resizeMode="contain"
-              className="w-12 h-12"
-            />
-          </View>
-        </View>
-
-        {/* Text Section */}
-        <View className="flex items-center space-y-2 ml-3">
-          <View className="flex items-start justify-center">
-            <Text className="text-lg font-semibold text-[#555]">
-              {item?.title}
-            </Text>
-            <Text className="text-sm font-semibold text-[#777]">
-              {item?.shortDescription}
-            </Text>
-            {/* <View className="flex-row items-center justify-center space-x-1">
-              <Text>RM  {item?.price * qty}</Text>
-              <Text> (Qty : {qty})</Text>
-            </View> */}
-            <Text className="text-lg font-bold text-black">
-              RM  {item?.price * qty}
-            </Text>
-          </View>
-        </View>
-
-        {/* Qty Section */}
-        <View className="flex-row items-center justify-center space-x-4 rounded-xl border border-gray-300 px-3 py-1 ml-auto">
-          <Text className="text-lg font-bold text-black"> Qty : {qty}</Text>
-        </View>
-      </View>
-    </Swipeable>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
 

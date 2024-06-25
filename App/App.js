@@ -6,7 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Provider } from "react-redux"
 import 'react-native-url-polyfill/auto';
 
-import { Upload, HomeScreen, OnBoardingScreen,ProductScreen,CartScreen,AuthScreen, AddItem,Upload2,Main,Likes,Listings,Profile,EditItem} from './screens';
+import { Upload, HomeScreen, OnBoardingScreen,ProductScreen,CartScreen,ConfirmCheckout,AuthScreen, AddItem,Upload2,Main,Likes,Listings,Profile,EditItem,Purchases,PurchaseDetails} from './screens';
 import { BottomTab } from './components';
 
 import store from './context/store';
@@ -41,6 +41,8 @@ const App = () => {
           <Stack.Screen name="Main" component={Main} />
           <Stack.Screen name="Listings" component={Listings} />
           <Stack.Screen name="Likes" component={Likes} />
+          <Stack.Screen name="Purchases" component={Purchases} />
+          <Stack.Screen name="PurchaseDetails" component={PurchaseDetails} />
           <Stack.Screen name="EditItem" component={EditItem} />
           <Stack.Screen name="Profile" component={Profile} />
           <Stack.Screen name="AddItem" component={AddItem} />
@@ -48,6 +50,7 @@ const App = () => {
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="ProductScreen" component={ProductScreen} />
           <Stack.Screen name="CartScreen" component={CartScreen} />
+          <Stack.Screen name="ConfirmCheckout" component={ConfirmCheckout} />
         </Stack.Navigator>
       </Provider>
       {activeScreen !== "OnBoarding" && activeScreen !== "AuthScreen" && (

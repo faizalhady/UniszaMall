@@ -150,7 +150,7 @@ const Profile = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.formContainer}>
-        <Text style={styles.header}>Profile</Text>
+        
         <Text>Current Username: {username}</Text>
         <TextInput
           style={styles.input}
@@ -159,23 +159,24 @@ const Profile = () => {
           placeholder="New Username"
         />
 
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.inputWithIcon}
-            value={oldPassword}
-            onChangeText={handleOldPasswordChange}
-            placeholder="Old Password"
-            secureTextEntry
-          />
-          {isOldPasswordValid !== null && (
-            <Icon
-              name={isOldPasswordValid ? "check" : "close"}
-              size={20}
-              color={isOldPasswordValid ? "green" : "red"}
-              style={styles.icon}
-            />
-          )}
-        </View>
+       
+        <View style={styles.passwordContainer} className="flex-row items-center">
+      <TextInput
+        className="flex-1 p-2 border border-gray-300 rounded"
+        value={oldPassword}
+        onChangeText={handleOldPasswordChange}
+        placeholder="Insert Old Password"
+        secureTextEntry
+      />
+      {isOldPasswordValid !== null && (
+        <Icon
+          name={isOldPasswordValid ? "check" : "close"}
+          size={20}
+          color={isOldPasswordValid ? "green" : "red"}
+          className="ml-2 -mt-1" // Adjusted margin top
+        />
+      )}
+    </View>
 
         {isOldPasswordValid && (
           <TextInput
@@ -206,8 +207,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   profilePicture: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
     borderRadius: 50,
     borderWidth: 2,
     borderColor: '#00bfa5',

@@ -27,6 +27,12 @@ const Main = () => {
         >
           <Text className="text-base text-white font-semibold">Listings</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Purchases')}
+          className="w-full h-16 bg-orange-500 rounded-2xl justify-center items-center shadow-md mb-4"
+        >
+          <Text className="text-base text-white font-semibold">Purchases</Text>
+        </TouchableOpacity>
       </View>
     </ScreenTemplate>
   );

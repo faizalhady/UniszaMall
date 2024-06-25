@@ -388,3 +388,142 @@ app.delete('/like-delete/:itemId', authenticateJWT, async (req, res) => {
   }
 });
 
+// ###########################################################################
+
+app.post('/cart/add', authenticateJWT, async (req, res) => {
+  const { itemId, quantity } = req.body;
+  const username = req.user.username; // Ensure your JWT payload includes the username
+
+  try {
+    const query = 'INSERT INTO cart (Username, item_id, Qty) VALUES (?, ?, ?)';
+    await db.query(query, [username, itemId, quantity]);
+    res.status(200).send({ message: 'Item added to cart successfully' });
+  } catch (error) {
+    console.error('Error adding item to cart:', error);
+    res.status(500).send({ message: 'Failed to add item to cart' });
+  }
+});
+
+
+
+app.delete('/cart/remove/:itemId', authenticateJWT, async (req, res) => {
+  const { itemId } = req.params;
+  const username = req.user.username;
+
+  try {
+    const query = 'DELETE FROM cart WHERE Username = ? AND item_id = ?';
+    await db.query(query, [username, itemId]);
+    res.status(200).send({ message: 'Item removed from cart successfully' });
+  } catch (error) {
+    console.error('Error removing item from cart:', error);
+    res.status(500).send({ message: 'Failed to remove item from cart' });
+  }
+});
+
+app.get('/cart', authenticateJWT, (req, res) => {
+  const username = req.user.username;
+
+  const query = 'SELECT item_id, Qty FROM cart WHERE Username = ?';
+
+  db.query(query, [username], (error, results) => {
+    if (error) {
+      console.error('Error fetching cart items:', error);
+      return res.status(500).send({ message: 'Failed to fetch cart items' });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
+// ###################################################################################
+
+app.post('/complete-purchase', authenticateJWT, (req, res) => {
+  const username = req.user.username;
+  const { items } = req.body;
+
+  console.log('Transferring items to purchase table with prices:', items);
+
+  // Get the current maximum ID in the purchase table
+  const maxIdQuery = 'SELECT MAX(id) AS maxId FROM purchase';
+  db.query(maxIdQuery, (maxIdError, results) => {
+    if (maxIdError) {
+      console.error('Error fetching maximum ID from purchase table:', maxIdError);
+      return res.status(500).send({ message: 'Failed to complete purchase' });
+    }
+
+    // Calculate the new batch ID
+    const newBatchId = (results[0].maxId || 0) + 1;
+
+    // Get the current date and time
+    const purchaseDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    // Prepare the values for insertion
+    const purchaseValues = items.map(item => [newBatchId, username, item.item_id, item.Qty, item.price, purchaseDate]);
+
+    const insertQuery = 'INSERT INTO purchase (id, Username, item_id, Qty, price, purchase_date) VALUES ?';
+    db.query(insertQuery, [purchaseValues], (insertError) => {
+      if (insertError) {
+        console.error('Error transferring items to purchase table:', insertError);
+        return res.status(500).send({ message: 'Failed to complete purchase' });
+      }
+
+      console.log('Items successfully transferred to purchase table with batch ID:', newBatchId);
+
+      const deleteQuery = 'DELETE FROM cart WHERE Username = ?';
+      db.query(deleteQuery, [username], (deleteError) => {
+        if (deleteError) {
+          console.error('Error deleting items from cart:', deleteError);
+          return res.status(500).send({ message: 'Failed to delete items from cart' });
+        }
+
+        console.log('Items successfully deleted from cart');
+        res.status(200).send({ message: 'Purchase completed successfully' });
+      });
+    });
+  });
+});
+
+app.get('/purchases', authenticateJWT, (req, res) => {
+  const username = req.user.username;
+
+  const query = 'SELECT DISTINCT id, purchase_date FROM purchase WHERE Username = ?';
+  db.query(query, [username], (error, results) => {
+    if (error) {
+      console.error('Error fetching purchase IDs:', error);
+      return res.status(500).send({ message: 'Failed to fetch purchase IDs' });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
+app.get('/purchase-details/:purchaseId', authenticateJWT, (req, res) => {
+  const { purchaseId } = req.params;
+  const username = req.user.username;
+
+  const query = 'SELECT item_id, Qty, price, purchase_date FROM purchase WHERE Username = ? AND id = ?';
+  db.query(query, [username, purchaseId], (error, results) => {
+    if (error) {
+      console.error('Error fetching purchase details:', error);
+      return res.status(500).send({ message: 'Failed to fetch purchase details' });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
+app.get('/purchases/:purchaseId', authenticateJWT, (req, res) => {
+  const username = req.user.username;
+  const purchaseId = req.params.purchaseId;
+
+  const query = 'SELECT item_id, Qty FROM purchase WHERE Username = ? AND id = ?';
+  db.query(query, [username, purchaseId], (error, results) => {
+    if (error) {
+      console.error('Error fetching purchase details:', error);
+      return res.status(500).send({ message: 'Failed to fetch purchase details' });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
