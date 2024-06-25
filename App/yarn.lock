@@ -4791,6 +4791,11 @@ expo-av@~13.10.6:
   resolved "https://registry.npmjs.org/expo-av/-/expo-av-13.10.6.tgz"
   integrity sha512-h3c1fg5yhWnP0RIGO+fhgPx6cmh4B4lnKdXR2i69aC3vs5D5Cu+JlzBon1gLIu6eUo2IVfC0RjSLpfQbcJ4doQ==
 
+expo-checkbox@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.npmjs.org/expo-checkbox/-/expo-checkbox-3.0.0.tgz"
+  integrity sha512-ZfNUawE0Bp/Xa5Gwtn04yfg6rCnKdqdmBXvEGbYg5U+IfRfLh+ocLiiBAcx760DfdYpzMGQOGpUtWQeEVmJwNw==
+
 expo-constants@~15.4.0:
   version "15.4.6"
   resolved "https://registry.npmjs.org/expo-constants/-/expo-constants-15.4.6.tgz"

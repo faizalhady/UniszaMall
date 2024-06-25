@@ -25,14 +25,15 @@ export default defineType({
       type: 'string',
       options: {
         list: [
-          { title: 'Stationery', value: 'stationery' },
-          { title: 'Electronics', value: 'electronics' },
-          { title: 'Textbooks', value: 'textbooks' },
-          { title: 'Backpacks & Bags', value: 'bags' },
-          { title: 'Health & Wellness Products', value: 'healthWellness' },
-          { title: 'Dorm Room Essentials', value: 'dormEssentials' },
-          { title: 'Snacks & Beverages', value: 'snacks' },
-          { title: 'Clothing & Accessories', value: 'clothing' },
+          { title: 'Stationery & Supplies', value: 'stationery' },
+          { title: 'Electronics & Gadgets', value: 'electronics' },
+          { title: 'Books & Study Materials', value: 'books' },
+          { title: 'Bags & Accessories', value: 'bags' },
+          { title: 'Health & Wellness', value: 'health' },
+          { title: 'Home & Living', value: 'home' },
+          { title: 'Food & Beverages', value: 'food' },
+          { title: 'Clothing & Apparel', value: 'clothing' },
+
         ],
         layout: 'radio'
       }

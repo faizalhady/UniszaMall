@@ -5,16 +5,16 @@ import { Picker } from '@react-native-picker/picker';
 
 const CategoryPicker = ({ title, selectedCategory, onCategoryChange }) => {
   const categories = [
-    { label: 'Stationery', value: 'stationery' },
-    { label: 'Laptops & Electronics', value: 'electronics' },
-    { label: 'Textbooks', value: 'textbooks' },
-    { label: 'Backpacks & Bags', value: 'bags' },
-    { label: 'Health & Wellness Products', value: 'healthWellness' },
-    { label: 'Dorm Room Essentials', value: 'dormEssentials' },
-    { label: 'Snacks & Beverages', value: 'snacks' },
-    { label: 'Personal Care Items', value: 'personalCare' },
-    { label: 'Clothing & Accessories', value: 'clothing' },
-  ];
+    { label: 'Stationery & Supplies', value: 'stationery' },
+    { label: 'Electronics & Gadgets', value: 'electronics' },
+    { label: 'Books & Study Materials', value: 'books' },
+    { label: 'Bags & Accessories', value: 'bags' },
+    { label: 'Health & Wellness', value: 'health' },
+    { label: 'Home & Living', value: 'home' },
+    { label: 'Food & Beverages', value: 'food' },
+    { label: 'Clothing & Apparel', value: 'clothing' },
+];
+
 
   return (
     <View className="space-y-4 pt-4">

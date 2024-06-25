@@ -527,3 +527,27 @@ app.get('/purchases/:purchaseId', authenticateJWT, (req, res) => {
   });
 });
 
+// #########################################################
+
+app.post('/update-recommend', (req, res) => {
+  const { category, count } = req.body;
+
+  if (!category || count == null) {
+    return res.status(400).send('Category and count are required');
+  }
+
+  // Update the recommend table
+  const query = `
+    INSERT INTO recommend (id, ${category})
+    VALUES (1, ${count})
+    ON DUPLICATE KEY UPDATE ${category} = ${count};
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error updating recommend table:', err);
+      return res.status(500).send('Server error');
+    }
+    res.send('Recommendation updated successfully');
+  });
+});

@@ -15,14 +15,6 @@ export const fetchQuery = `*[_type == 'products'] | order(__createdAt){
   shortDescription,
   description,
   price,
-  categories[]->{
-    _id,
-    title,
-    mainImage{
-      asset -> {
-        url
-      }
-    }
-  },
+  categories,
   username
 }`;
