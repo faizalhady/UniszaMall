@@ -10,14 +10,14 @@ const RFeeds = ({ feeds, onPress }) => {
           {feeds?.map((item, i) => (
             <TouchableOpacity key={i} onPress={() => onPress(item.categories)} style={{ margin: 5 }}>
                 
-              <View style={{ width: 70, height: 70 }}>
+              <View style={{ width: 65, height: 65 }}>
                 <Image 
                   source={{ uri: item.mainImage.asset.url }} 
                   style={{ width: '100%', height: '100%', borderRadius: 10 }}
                 />
-                <Text numberOfLines={1} style={{ fontSize: 10, textAlign: 'center', marginTop: 5 }}>
+                {/* <Text numberOfLines={1} style={{ fontSize: 10, textAlign: 'center', marginTop: 5 }}>
                   {item.title}
-                </Text>
+                </Text> */}
               </View>
             </TouchableOpacity>
           ))}

@@ -24,6 +24,15 @@ const categories = [
   { label: 'Clothing & Apparel', value: 'clothing' },
 ];
 
+const shuffleArray = (array) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
 const HomeScreen = ({ activeScreen }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +42,7 @@ const HomeScreen = ({ activeScreen }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [highestRecommendFeeds, setHighestRecommendFeeds] = useState([]);
   const [showRFeeds, setShowRFeeds] = useState(true); // State to control visibility of RFeeds
+  const [shuffledFeeds, setShuffledFeeds] = useState([]);
   const feeds = useSelector((state) => state.feeds);
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -77,7 +87,9 @@ const HomeScreen = ({ activeScreen }) => {
     try {
       const res = await fetchFeeds();
       dispatch(SET_FEEDS(res));
-      setFiltered(res); // Set initial filtered feeds
+      const shuffled = shuffleArray(res);
+      setShuffledFeeds(shuffled); // Set shuffled feeds
+      setFiltered(shuffled); // Set initial filtered feeds
       setIsLoading(false);
     } catch (error) {
       console.error(error);
@@ -224,13 +236,14 @@ const HomeScreen = ({ activeScreen }) => {
         >
           <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
             <View className="bg-white p-4 rounded-xl w-72">
-              <ScrollView className="max-h-60">
+              <ScrollView className="max-h-80">
                 {categories.map(category => (
                   <View key={category.value} className="flex-row items-center justify-between mb-2">
                     <Text className="text-base">{category.label}</Text>
                     <Checkbox
                       value={selectedCategories.includes(category.value)}
                       onValueChange={() => toggleCategory(category.value)}
+                      style={{ width: 26, height: 26 }}
                     />
                   </View>
                 ))}
@@ -275,7 +288,7 @@ const HomeScreen = ({ activeScreen }) => {
             </View>
           ) : (
             <Feeds
-              feeds={filtered || feeds?.feeds}
+              feeds={filtered || shuffledFeeds}
               // onPress={handleProductClick}
             />
           )}

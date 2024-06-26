@@ -38,7 +38,7 @@ const Purchases = () => {
   };
 
   const formatDate = (dateString) => {
-    return moment(dateString).format('YYYY-MM-DD HH:mm:ss');
+    return moment(dateString).format('YYYY-MM-DD');
   };
 
   if (loading) {
@@ -51,9 +51,9 @@ const Purchases = () => {
 
   return (
     <ScreenTemplate title="Purchases">
-      <View className="flex-1 w-full items-start justify-start bg-[#EBEAEF] space-y-4">
+      <View className="flex-1 w-full items-start justify-start  space-y-4 items-center">
         {purchases.length === 0 ? (
-          <View className="flex-1 items-center py-12">
+          <View className="flex-1 items-center py-12 ">
             <Text className="text-xl font-semibold text-[#555]">No Purchases Found</Text>
           </View>
         ) : (
@@ -63,9 +63,9 @@ const Purchases = () => {
             renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => handlePress(item.id)}
-                className="w-full p-4 bg-white rounded-xl mb-4"
+                className="w-full p-4 bg-orange-500 rounded-xl mb-4"
               >
-                <Text className="text-lg font-semibold text-[#555]">Purchased On: {formatDate(item.purchase_date)}</Text>
+                <Text className="text-lg font-semibold text-[#fff]">Purchased On: {formatDate(item.purchase_date)}</Text>
               </TouchableOpacity>
             )}
           />

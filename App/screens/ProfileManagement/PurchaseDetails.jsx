@@ -126,7 +126,7 @@ const PurchaseDetails = () => {
         )}
         <View style={{ paddingHorizontal: 16, width: '100%', marginTop: 16 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: '#555' }}>Subtotal</Text>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: '#555' }}>Grandtotal</Text>
             <Text style={{ fontSize: 18, fontWeight: '700', color: 'black' }}>RM {subtotal.toFixed(2)}</Text>
           </View>
         </View>

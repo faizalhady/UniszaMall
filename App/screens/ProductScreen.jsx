@@ -8,10 +8,10 @@ import {
   Image,
   Alert,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AntDesign, Entypo, MaterialIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { addtocart } from "../context/actions/cartActions"; // Ensure you have addtocart action
 import axios from "../AxiosConfig";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -104,12 +104,17 @@ const ProductScreen = ({ route }) => {
       if (productData) {
         updateCategory(productData.categories); // Trigger the function when the product is loaded
       }
-      fetchCartItems();
       setInterval(() => {
         setIsLoading(false);
       }, 2000);
     }
   }, [feeds]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchCartItems(); // Refresh cart items when screen is focused
+    }, [])
+  );
 
   const handleQty = (action) => {
     const newQty = qty + action;

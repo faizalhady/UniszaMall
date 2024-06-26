@@ -128,7 +128,7 @@ const AddItem = () => {
 
   return (
     <ScreenTemplate title="Add Item">
-      <ScrollView className="px-4 pb-40" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView className="px-4 pb-40" contentContainerStyle={{ paddingBottom: 10 }}>
         <FormField
           title="Title"
           value={form.title}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { View, Text } from 'react-native'
+import { View, Text, LogBox } from 'react-native'
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Provider } from "react-redux"
@@ -10,6 +10,10 @@ import { Upload, HomeScreen, OnBoardingScreen,ProductScreen,CartScreen,ConfirmCh
 import { BottomTab } from './components';
 
 import store from './context/store';
+
+
+LogBox.ignoreLogs(['VirtualizedLists should never be nested inside plain ScrollViews with the same orientation']);
+
 
 const Stack = createNativeStackNavigator();
 

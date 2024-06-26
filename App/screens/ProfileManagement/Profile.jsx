@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Alert, Image, TouchableOpacity, Platform, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Alert, Image, TouchableOpacity, ScrollView } from 'react-native';
 import axios from '../../AxiosConfig'; // Import the configured axios instance
 import AsyncStorage from '@react-native-async-storage/async-storage'; // For managing storage in React Native
 import * as ImagePicker from 'expo-image-picker';
@@ -50,12 +50,12 @@ const Profile = () => {
   }, []);
 
   const requestPermission = async () => {
-    if (Platform.OS !== "web") {
+    
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         alert("Sorry, we need media library permissions to make this work!");
       }
-    }
+    
   };
 
   const pickImage = async () => {
@@ -144,127 +144,67 @@ const Profile = () => {
 
   return (
     <ScreenTemplate title="Profile">
-      <View style={styles.profilePictureContainer}>
-        <TouchableOpacity onPress={pickImage}>
-          <Image source={{ uri: profilePicture || oldProfilePicture || 'https://path.to.default/image.png' }} style={styles.profilePicture} />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.formContainer}>
+      <ScrollView className="px-4 pb-40" contentContainerStyle={{ paddingBottom: 100 }}>
+        <View className="flex items-center my-4">
+          <TouchableOpacity onPress={pickImage}>
+            <Image source={{ uri: profilePicture || oldProfilePicture || 'https://path.to.default/image.png' }} className="w-32 h-32 rounded-full border-2 border-[#00bfa5]" />
+          </TouchableOpacity>
+        </View>
         
-        <Text>Current Username: {username}</Text>
-        <TextInput
-          style={styles.input}
-          value={newUsername}
-          onChangeText={handleUsernameChange}
-          placeholder="New Username"
-        />
+        <View className="my-4">
+          <Text className="text-base text-black font-medium">Current Username: {username}</Text>
+          <TextInput
+            className="w-full h-12 border border-gray-300 rounded p-2 mt-2"
+            value={newUsername}
+            onChangeText={handleUsernameChange}
+            placeholder="New Username"
+          />
+        </View>
 
-       
-        <View style={styles.passwordContainer} className="flex-row items-center">
-      <TextInput
-        className="flex-1 p-2 border border-gray-300 rounded"
-        value={oldPassword}
-        onChangeText={handleOldPasswordChange}
-        placeholder="Insert Old Password"
-        secureTextEntry
-      />
-      {isOldPasswordValid !== null && (
-        <Icon
-          name={isOldPasswordValid ? "check" : "close"}
-          size={20}
-          color={isOldPasswordValid ? "green" : "red"}
-          className="ml-2 -mt-1" // Adjusted margin top
-        />
-      )}
-    </View>
+        <View className="my-4">
+          <Text className="text-base text-black font-medium">Old Password</Text>
+          <View className="flex-row items-center mt-2">
+            <TextInput
+              className="flex-1 h-12 border border-gray-300 rounded p-2"
+              value={oldPassword}
+              onChangeText={handleOldPasswordChange}
+              placeholder="Insert Old Password"
+              secureTextEntry
+            />
+            {isOldPasswordValid !== null && (
+              <Icon
+                name={isOldPasswordValid ? "check" : "close"}
+                size={20}
+                color={isOldPasswordValid ? "green" : "red"}
+                className="ml-2"
+              />
+            )}
+          </View>
+        </View>
 
         {isOldPasswordValid && (
-          <TextInput
-            style={styles.input}
-            value={newPassword}
-            onChangeText={handleNewPasswordChange}
-            placeholder="New Password"
-            secureTextEntry
-          />
+          <View className="my-4">
+            <Text className="text-base text-black font-medium">New Password</Text>
+            <TextInput
+              className="w-full h-12 border border-gray-300 rounded p-2 mt-2"
+              value={newPassword}
+              onChangeText={handleNewPasswordChange}
+              placeholder="New Password"
+              secureTextEntry
+            />
+          </View>
         )}
 
-        <Button title="Save Changes" onPress={handleSaveChanges} />
-        {message ? <Text style={styles.message}>{message}</Text> : null}
-      </View>
+        <TouchableOpacity
+          onPress={handleSaveChanges}
+          className="w-full h-12 bg-orange-500 rounded-2xl justify-center items-center shadow-md mt-6"
+        >
+          <Text className="text-base text-white font-semibold">Save Changes</Text>
+        </TouchableOpacity>
+        {message ? <Text className="text-center text-green-500 mt-4">{message}</Text> : null}
+      </ScrollView>
     </ScreenTemplate>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    paddingTop: 90,
-    backgroundColor: "#fff",
-  },
-  profilePictureContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  profilePicture: {
-    width: 200,
-    height: 200,
-    borderRadius: 50,
-    borderWidth: 2,
-    borderColor: '#00bfa5',
-  },
-  formContainer: {
-    marginBottom: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  inputWithIcon: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    flex: 1,
-  },
-  addImageBtn: {
-    backgroundColor: "#00bfa5",
-    borderRadius: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  addImageText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  image: {
-    width: 200,
-    height: 200,
-    marginTop: 10,
-    alignSelf: "center",
-  },
-  message: {
-    color: 'green',
-    textAlign: 'center',
-    marginVertical: 10,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  icon: {
-    marginLeft: 10,
-  },
-});
 
 export default Profile;

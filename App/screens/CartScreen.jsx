@@ -118,20 +118,22 @@ const CartScreen = () => {
         onSwipeableRightOpen={() => handleDeleteCartItem(item._id)}
       >
         <View className="flex-row px-6 w-full items-center my-1">
-          <View className="bg-white rounded-xl flex items-center justify-center p-2 w-16 h-16 relative">
-            <Image
-              source={{ uri: item?.mainImage?.asset?.url }}
-              resizeMode="cover"
-              className="w-full h-full opacity-30"
-            />
-            <View className="inset-0 absolute  flex items-center justify-center ">
+          <TouchableOpacity onPress={() => navigation.navigate("ProductScreen", { _id: item._id })}>
+            <View className="bg-white rounded-xl flex items-center justify-center p-2 w-16 h-16 relative">
               <Image
                 source={{ uri: item?.mainImage?.asset?.url }}
-                resizeMode="contain"
-                className="w-12 h-12"
+                resizeMode="cover"
+                className="w-full h-full opacity-30"
               />
+              <View className="inset-0 absolute  flex items-center justify-center ">
+                <Image
+                  source={{ uri: item?.mainImage?.asset?.url }}
+                  resizeMode="contain"
+                  className="w-12 h-12"
+                />
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
 
           <View className="flex items-center space-y-2 ml-3 flex-1">
             <View className="flex items-start justify-center">
@@ -179,8 +181,8 @@ const CartScreen = () => {
 
           <View className="w-10 h-10 rounded-xl  flex items-center justify-center relative">
             <FontAwesome5 name="shopping-bag" size={26} color="black" />
-            <View className="absolute w-4 h-4 bg-orange-500 top-0 right-0 rounded-md flex items-center justify-center " >
-              <Text className="text-white" >{cartItems?.length}</Text>
+            <View className="absolute w-5 h-5 bg-orange-500 top-0 right-0 rounded-md flex items-center justify-center " >
+              <Text className="text-white"  style={{ top: -2 }}>{cartItems?.length}</Text>
             </View>
           </View>
         </View>
